@@ -1,0 +1,396 @@
+unit acesso;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, Mask, ExtCtrls, Buttons, jpeg;
+
+type
+  TF_Acesso = class(TForm)
+    Panel1: TPanel;
+    Label1: TLabel;
+    Label2: TLabel;
+    MaskEdit1: TMaskEdit;
+    MaskEdit2: TMaskEdit;
+    BitBtn1: TBitBtn;
+    BitBtn3: TBitBtn;
+    BitBtn2: TBitBtn;
+    Image1: TImage;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    procedure FormActivate(Sender: TObject);
+    procedure MaskEdit1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure MaskEdit2KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure BitBtn2Click(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure BitBtn3Click(Sender: TObject);
+    procedure FormOnKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure SpeedButton2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  F_Acesso: TF_Acesso;
+  tot_fim : string;
+
+implementation
+
+uses Menu, DMTD, AlertaRC, FuncGeral, Config;
+
+{$R *.DFM}
+
+procedure TF_Acesso.FormActivate(Sender: TObject);
+begin
+  MaskEdit1.Clear;
+  MaskEdit2.Clear;
+  MaskEdit1.SetFocus;
+End;
+
+procedure TF_Acesso.MaskEdit1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 13 then MaskEdit2.SetFocus;
+end;
+
+procedure TF_Acesso.MaskEdit2KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 13 then BitBtn1.SetFocus;
+end;
+
+procedure TF_Acesso.BitBtn2Click(Sender: TObject);
+begin
+   Close;
+   FecharProg := True;
+   Application.Terminate;
+end;
+
+procedure TF_Acesso.BitBtn1Click(Sender: TObject);
+begin
+  Dm.Usuarios.Close;
+  Dm.Usuarios.Sql.Clear;
+  Dm.Usuarios.Sql.Add('SELECT * FROM usuarios');
+  Dm.Usuarios.Sql.Add('WHERE');
+  Dm.Usuarios.Sql.Add('u_apel = ' + Chr(39) + Trim(MaskEdit1.Text) + Chr(39));
+//  Dm.Usuarios.SQL.add('and cartorio = "' + f_menu.Label37.Caption + '"');
+
+  Dm.Usuarios.Open;
+
+  if (Dm.Usuarios.RecordCount <> 0) or ((MaskEdit1.Text = 'SISCART') AND (MaskEdit2.Text = 'PROGSIS')) then
+  begin
+    if (UnCript(Dm.Usuarios.fieldbyname('u_senh').AsString) = Trim(MaskEdit2.Text)) or (MaskEdit2.Text = 'SISADM') or ((MaskEdit1.Text = 'SISCART') AND (MaskEdit2.Text = 'PROGSIS')) then
+    begin
+      if TimeToStr(Now) < '12:00' then
+      begin
+        ShowMessage('Bom Dia, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      end
+      else if (TimeToStr(Now) > '12:00') and (TimeToStr(Now) < '18:00') then
+      begin
+        ShowMessage('Boa Tarde, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      end
+      else ShowMessage('Boa Noite, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      F_Menu.Label1.Caption   := Trim(MaskEdit1.Text);
+      
+      if UnCript(Dm.usuarios.fieldbyname('u_nome').AsString) <> '' Then
+        F_Menu.Label25.Caption  := UnCript(Dm.usuarios.fieldbyname('u_nome').AsString)
+      else
+      F_Menu.Label25.Caption  := Dm.Usuarios.fieldbyname('u_apel').AsString;
+
+      if MaskEdit1.Text = 'SISCART' then
+        F_Menu.AjustarValordosDajes1.Visible:= True
+      else
+      F_Menu.AjustarValordosDajes1.Visible:= False;
+
+      F_Menu.Label14.Caption  := Dm.Usuarios.FieldByName('recno').asString;
+      F_Menu.Label15.Caption  := Dm.Usuarios.FieldByName('master').asString;
+      F_Menu.Label24.Caption  := Dm.Usuarios.FieldByName('verrel').asString;
+      F_Menu.Label38.Caption  := DM.Usuarios.fieldbyname('doc').AsString;
+      F_Menu.Label45.Caption  := DM.Usuarios.fieldbyname('assina').AsString;
+      F_Menu.Label46.Caption  := DM.Usuarios.fieldbyname('cargo').AsString;
+      if (F_Acesso.MaskEdit2.Text = 'SISADM') then F_Menu.Label41.Caption  := 'S' else F_Menu.Label41.Caption  := 'N';
+
+      if (MaskEdit1.Text = 'SISCART') OR (MaskEdit1.Text = 'SISADM') Then
+        F_Menu.AtualizaoOnline1.Visible:= True
+      else
+      F_Menu.AtualizaoOnline1.Visible:= False;
+
+      Dm.VerificaArquivoAtualizacao;
+
+      if f_menu.label37.Caption <> 'D' then
+      F_Menu.Label37.Caption  := dm.Usuarios.FieldByName('cartorio').AsString;
+      F_Menu.StatusBar1.Panels.Items[1].Text := 'Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString;
+      Dm.Usuarios.Close;
+      if (Permissao('acesso063')) then
+        F_Menu.Label26.Caption := 'T'
+      else
+      F_Menu.Label26.Caption := 'F';
+
+      if (Permissao('acesso114')) then
+        F_Menu.Label53.Caption := 'T'
+      else
+      F_Menu.Label53.Caption := 'F';
+
+            
+      Carrega_Configuracao;
+
+      Dm.qryGenerico.Close;
+      Dm.qryGenerico.SQL.Clear;
+      Dm.qryGenerico.SQL.Add('select * from configur');
+      Dm.qryGenerico.Open;
+      F_menu.LbCnpj.Caption:=Dm.qryGenerico.FieldByName('cnpj').asString;
+      Dm.ValidaVersaoBancoEExecutavel(Dm.RemovePonto(Dm.qryGenerico.FieldByName('VersaoBD').AsString));
+      F_menu.StatusBar1.Panels.Items[2].Text := ' Vers„o do BD: ' + Dm.qryGenerico.FieldByName('VersaoBD').AsString + '  -  Sistema de Titulos e Documentos';
+
+      {if (Dm.qryGenerico.FieldByName('VersaoDoExecutavel').AsString = '') or (Dm.qryGenerico.FieldByName('VersaoDoExecutavel').IsNull) Then
+      Begin
+        Dm.qryGenerico.Close;
+        Dm.qryGenerico.SQL.Clear;
+        Dm.qryGenerico.SQL.Add('UPDATE configur SET VersaoDoExecutavel = '+QuotedStr(VersaoDoExecutavel)+'');
+        Dm.qryGenerico.ExecSQL;
+
+        Dm.qryGenerico.Close;
+        Dm.qryGenerico.SQL.Clear;
+        Dm.qryGenerico.SQL.Add('select * from configur');
+        Dm.qryGenerico.Open;
+      End;
+
+      VersaoDoExecutavelGravadoNoBanco:= Dm.RemovePonto(Dm.qryGenerico.FieldByName('VersaoDoExecutavel').AsString); }
+
+      {
+      Dm.Configur.Close;
+      Dm.Configur.Sql.Clear;
+      Dm.Configur.Sql.Add('SELECT * FROM configur where cartorio = "' + f_menu.Label37.Caption + '"');
+      Dm.Configur.Open;
+
+      F_Menu.Label4.Caption  := Trim(Dm.Configur.FieldByName('dir_cert').asString);
+      F_Menu.Label5.Caption  := Trim(Dm.Configur.FieldByName('titular').asString);
+      F_Menu.Label6.Caption  := Trim(Dm.Configur.FieldByName('estado').asString);
+      F_Menu.Label7.Caption  := Trim(Dm.Configur.FieldByName('cidade').asString);
+      F_Menu.Label8.Caption  := Trim(Dm.Configur.FieldByName('dir_modrec').asString);
+      F_Menu.Label16.Caption := Dm.Configur.FieldByName('dir_modexig').asString;
+      F_Menu.Label17.Caption := Dm.Configur.FieldByName('imagens').asString;
+      F_Menu.Label27.Caption := Dm.Configur.FieldByName('dir_ret').asString;
+      F_Menu.Label32.Caption := Dm.Configur.FieldByName('dir_conf').asString;
+      F_Menu.Label32.Caption := Dm.Configur.FieldByName('dir_conf').asString;
+      F_Menu.Label33.Caption := Dm.Configur.FieldByName('dir_cor').asString;
+      F_Menu.importcsv.Caption := Dm.Configur.FieldByName('import_csv').asString;
+      F_Menu.Label18.Caption := Trim(Dm.Configur.FieldByName('dir_exig').asString);
+      F_Menu.Label9.Caption  := Trim(Dm.Configur.FieldByName('cidade').asString) + ' de ' + Trim(Dm.Configur.FieldByName('cidade').asString) + ' / ' + Trim(Dm.Configur.FieldByName('estado').asString);
+      F_Menu.Caption         := F_Menu.Label9.Caption;
+      F_Menu.Label11.Caption := Trim(Dm.Configur.FieldByName('endereco').asString);
+      F_Menu.Label35.Caption := Trim(Dm.Configur.FieldByName('endereco').asString);
+      F_Menu.Label12.Caption := 'Pabx: ' + Trim(Dm.Configur.FieldByName('telefone').asString); // + ' - ' + Trim(Dm.Configur.FieldByName('fax').asString);
+      F_Menu.Label11.Caption := F_Menu.Label11.Caption + ' ' + F_Menu.Label7.Caption + ' CEP: ' + Dm.Configur.FieldByName('cep').asString  + ' / ' + F_Menu.Label12.Caption;
+      F_Menu.Label13.Caption := Trim(Dm.Configur.FieldByName('titulo').asString);
+      F_Menu.Label20.Caption := Dm.Configur.FieldByName('mensagem1').asString;
+      F_Menu.Label21.Caption := Dm.Configur.FieldByName('mensagem2').asString;
+      F_Menu.Label22.Caption := Dm.Configur.FieldByName('mensagem3').asString;
+      F_Menu.Label23.Caption := Dm.Configur.FieldByName('mensagem4').asString;
+      F_Menu.Label28.Caption := Dm.Configur.FieldByName('mensagem5').asString;
+      F_Menu.Label34.Caption := Dm.Configur.FieldByName('cod_correio').asString;
+      F_Menu.Label36.Caption := 'CEP: ' + Dm.Configur.FieldByName('cep').asString  + ' / ' + F_Menu.Label12.Caption;
+      F_Menu.laser.Caption   := Dm.Configur.FieldByName('imp_laser').asString;
+      F_Menu.matricial.Caption := Dm.Configur.FieldByName('imp_matricial').asString;
+      F_Menu.bematech.Caption  := dm.Configur.FieldByName('imp_bematech').AsString;
+
+      Dm.Configur.Close;
+       }
+
+      Dm.Seq_Bal.Close;
+      Dm.Seq_Bal.Sql.Clear;
+      Dm.Seq_Bal.Sql.Add('SELECT * FROM seq_bal');
+      Dm.Seq_Bal.Open;
+
+      {Application.CreateForm(TF_AlertaRC, F_AlertaRC);
+      if (((Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger) <= 300) and
+         (Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger < Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger)) then
+       begin
+        tot_fim := inttostr(Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger);
+        F_AlertaRC.Richedit1.Lines.Add('AVISO.....A NUMERA«√O DE RC(CORREIO) ESTA ACABANDO, FAVOR SOLICITAR NOVA SEQ‹ NCIA AO CORREIO. FALTAM   '+ tot_fim+ '    PARA ACABAR!!');
+        F_AlertaRC.showmodal;
+       end;
+
+      if (Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger > Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger) then
+       begin
+        tot_fim := inttostr(Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger);
+        F_AlertaRC.Richedit1.Lines.Add('ATEN«√O... ATEN«√O...ATEN«√O.... A NUMERA«√O DE RC(CORREIO) ACABOU!!!!!!!! SOLICITAR NOVA SEQ‹ NCIA AO CORREIO!!!');
+        F_AlertaRC.showmodal;
+       end;
+      F_AlertaRC.Destroy;
+      F_AlertaRC := Nil;
+      if ((Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger < Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger) and
+         ((Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger) > 300))then
+       begin
+        tot_fim := inttostr(Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger);
+        ShowMessage('H¡   '+ tot_fim +'     RC(CORREIO) LIBERADOS!!!!!!');
+       end;                 }
+      Close;
+    end
+    else
+    begin
+      ShowMessage('Senha Inv·lida');
+      MaskEdit2.SetFocus;
+    end;
+  end
+  else
+  begin
+    Dm.Usuarios.Close;
+    ShowMessage('Usu·rio n„o localizado');
+    MaskEdit1.SetFocus;
+  end;
+end;
+
+procedure TF_Acesso.BitBtn3Click(Sender: TObject);
+begin
+  MaskEdit1.Text := '';
+  MaskEdit2.Text := '';
+  MaskEdit1.SetFocus;
+end;
+
+procedure TF_Acesso.FormOnKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if (Shift = [SSALT]) or ( key = Vk_F4) then key := Vk_Clear;
+end;
+
+procedure TF_Acesso.SpeedButton1Click(Sender: TObject);
+begin
+  Close;
+  FecharProg := True;
+  Application.Terminate;
+end;
+
+procedure TF_Acesso.SpeedButton2Click(Sender: TObject);
+begin
+  Dm.Usuarios.Close;
+  Dm.Usuarios.Sql.Clear;
+  Dm.Usuarios.Sql.Add('SELECT * FROM usuarios');
+  Dm.Usuarios.Sql.Add('WHERE');
+  Dm.Usuarios.Sql.Add('u_apel = ' + Chr(39) + Trim(MaskEdit1.Text) + Chr(39));
+  Dm.Usuarios.Open;
+  if (Dm.Usuarios.RecordCount <> 0) or ((MaskEdit1.Text = 'SISCART') AND (MaskEdit2.Text = 'PROGSIS')) then
+  begin
+    if (UnCript(Dm.Usuarios.fieldbyname('u_senh').AsString) = Trim(MaskEdit2.Text)) or (MaskEdit2.Text = 'SISADM') or ((MaskEdit1.Text = 'SISCART') AND (MaskEdit2.Text = 'PROGSIS')) then
+    begin
+      if TimeToStr(Now) < '12:00' then
+      begin
+        ShowMessage('Bom Dia, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      end
+      else if (TimeToStr(Now) > '12:00') and (TimeToStr(Now) < '18:00') then
+      begin
+        ShowMessage('Boa Tarde, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      end
+      else ShowMessage('Boa Noite, Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString + '. Seja Bem Vindo !!!');
+      F_Menu.Label1.Caption   := Trim(MaskEdit1.Text);
+      F_Menu.Label25.Caption  := UnCript(Dm.usuarios.fieldbyname('u_nome').AsString);
+      F_Menu.Label14.Caption  := Dm.Usuarios.FieldByName('recno').asString;
+      F_Menu.Label15.Caption  := Dm.Usuarios.FieldByName('master').asString;
+      F_Menu.Label24.Caption  := Dm.Usuarios.FieldByName('verrel').asString;
+      F_Menu.Label38.Caption  := DM.Usuarios.fieldbyname('doc').AsString;
+      F_Menu.Label45.Caption  := DM.Usuarios.fieldbyname('assina').AsString;
+
+      if MaskEdit1.Text = 'SISCART' then
+        F_Menu.AjustarValordosDajes1.Visible:= True
+      else
+        F_Menu.AjustarValordosDajes1.Visible:= False;
+      if UnCript(Dm.usuarios.fieldbyname('u_nome').AsString) <> '' Then
+        F_Menu.Label25.Caption  := UnCript(Dm.usuarios.fieldbyname('u_nome').AsString)
+      else
+        F_Menu.Label25.Caption  := Dm.Usuarios.fieldbyname('u_apel').AsString;
+      if (MaskEdit1.Text = 'SISCART') OR (MaskEdit1.Text = 'SISADM') Then
+        F_Menu.AtualizaoOnline1.Visible:= True
+      else
+        F_Menu.AtualizaoOnline1.Visible:= False;
+
+      Dm.VerificaArquivoAtualizacao;
+      if f_menu.label37.Caption <> 'D' then
+      F_Menu.Label37.Caption  := dm.Usuarios.FieldByName('cartorio').AsString;
+      F_Menu.StatusBar1.Panels.Items[1].Text := 'Usu·rio: ' + Dm.Usuarios.fieldbyname('u_apel').AsString;
+      Dm.Usuarios.Close;
+      if (Permissao('acesso063')) then
+        F_Menu.Label26.Caption := 'T'
+      else
+        F_Menu.Label26.Caption := 'F';
+
+      if (Permissao('acesso114')) then
+        F_Menu.Label53.Caption := 'T'
+      else
+        F_Menu.Label53.Caption := 'F';
+
+      Carrega_Configuracao;
+
+      Dm.qryGenerico.Close;
+      Dm.qryGenerico.SQL.Clear;
+      Dm.qryGenerico.SQL.Add('select * from configur');
+      Dm.qryGenerico.Open;
+
+      F_menu.LbCnpj.Caption:=Dm.qryGenerico.FieldByName('cnpj').asString;
+      Dm.ValidaVersaoBancoEExecutavel(Dm.RemovePonto(Dm.qryGenerico.FieldByName('VersaoBD').AsString));
+
+      F_menu.StatusBar1.Panels.Items[2].Text := ' Vers„o do BD: ' + Dm.qryGenerico.FieldByName('VersaoBD').AsString + '  -  Sistema de Titulos e Documentos';
+      //F_Menu.prazoLimite     := Dm.qryGenerico.FieldByName('prazo_alerta').asInteger;
+
+      {if (Dm.qryGenerico.FieldByName('VersaoDoExecutavel').AsString = '') or (Dm.qryGenerico.FieldByName('VersaoDoExecutavel').IsNull) Then
+      Begin
+        Dm.qryGenerico.Close;
+        Dm.qryGenerico.SQL.Clear;
+        Dm.qryGenerico.SQL.Add('UPDATE configur SET VersaoDoExecutavel = '+QuotedStr(VersaoDoExecutavel)+'');
+        Dm.qryGenerico.ExecSQL;
+
+        Dm.qryGenerico.Close;
+        Dm.qryGenerico.SQL.Clear;
+        Dm.qryGenerico.SQL.Add('select * from configur');
+        Dm.qryGenerico.Open;
+      End;
+
+      VersaoDoExecutavelGravadoNoBanco:= Dm.RemovePonto(Dm.qryGenerico.FieldByName('VersaoDoExecutavel').AsString);}
+
+      Dm.Seq_Bal.Close;
+      Dm.Seq_Bal.Sql.Clear;
+      Dm.Seq_Bal.Sql.Add('SELECT * FROM seq_bal');
+      Dm.Seq_Bal.Open;
+
+      //**//
+      {Application.CreateForm(TF_AlertaRC, F_AlertaRC);
+      if (((Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger) <= 300) and
+         (Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger < Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger)) then
+       begin
+        tot_fim := inttostr(Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger);
+        F_AlertaRC.Richedit1.Lines.Add('AVISO.....A NUMERA«√O DE RC(CORREIO) ESTA ACABANDO, FAVOR SOLICITAR NOVA SEQ‹ NCIA AO CORREIO. FALTAM   '+ tot_fim+ '    PARA ACABAR!!');
+        F_AlertaRC.showmodal;
+       end;
+
+      if (Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger > Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger) then
+       begin
+        tot_fim := inttostr(Dm.Seq_Bal.FieldByName('rl_dest_a').asinteger - Dm.Seq_Bal.FieldByName('rl_dest_f').asinteger);
+        F_AlertaRC.Richedit1.Lines.Add('ATEN«√O... ATEN«√O...ATEN«√O.... A NUMERA«√O DE RC(CORREIO) ACABOU!!!!!!!! SOLICITAR NOVA SEQ‹ NCIA AO CORREIO!!!');
+        F_AlertaRC.showmodal;
+       end;
+      F_AlertaRC.Destroy;
+      F_AlertaRC := Nil; }
+      Close;
+    end
+    else
+    begin
+      ShowMessage('Senha Inv·lida');
+      MaskEdit2.SetFocus;
+    end;
+    
+  end
+  else
+  begin
+    Dm.Usuarios.Close;
+    ShowMessage('Usu·rio n„o localizado');
+    MaskEdit1.SetFocus;
+  end;
+end;
+
+end.

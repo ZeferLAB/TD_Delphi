@@ -1,0 +1,83 @@
+unit Baixa_ExameCalculo;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, Buttons, ComCtrls, ExtCtrls, DateUtils;
+
+type
+  TFrm_Baixa = class(TForm)
+    Panel1: TPanel;
+    GroupBox1: TGroupBox;
+    rbRegistro: TRadioButton;
+    rbIrregular: TRadioButton;
+    dtBaixa: TDateTimePicker;
+    Label1: TLabel;
+    BitBtn4: TBitBtn;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    procedure FormActivate(Sender: TObject);
+    procedure BitBtn4Click(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure BitBtn2Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+    protocolo: String;
+  end;
+
+var
+  Frm_Baixa: TFrm_Baixa;
+
+implementation
+
+{$R *.DFM}
+
+uses U_ExameCalculo;
+
+procedure TFrm_Baixa.FormActivate(Sender: TObject);
+begin
+  dtBaixa.Date := Now;
+end;
+
+procedure TFrm_Baixa.BitBtn4Click(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TFrm_Baixa.BitBtn1Click(Sender: TObject);
+begin
+  if F_ExameCalculo.qryNotificacao.Active then
+  begin
+    F_ExameCalculo.qryNotificacao.Edit;
+    if rbRegistro.checked then
+      F_ExameCalculo.qryNotificacao.FieldByName('statusBaixa').AsString := 'APTO PARA REGISTRO'
+    else if rbIrregular.checked then
+      F_ExameCalculo.qryNotificacao.FieldByName('statusBaixa').AsString := 'IRREGULAR';
+    F_ExameCalculo.qryNotificacao.FieldByName('dataBaixa').AsString := FormatDateTime('yyyy-mm-dd', dtBaixa.date);
+    try
+      F_ExameCalculo.qryNotificacao.Post;
+    finally
+      ShowMessage('Baixa realizada com sucesso!');
+    end;
+  end;
+end;
+
+procedure TFrm_Baixa.BitBtn2Click(Sender: TObject);
+begin
+  if F_ExameCalculo.qryNotificacao.Active then
+  begin
+    F_ExameCalculo.qryNotificacao.Edit;
+    F_ExameCalculo.qryNotificacao.FieldByName('statusBaixa').AsString := 'EXAME';
+    F_ExameCalculo.qryNotificacao.FieldByName('dataBaixa').AsString := '';
+    try
+      F_ExameCalculo.qryNotificacao.Post;
+    finally
+      ShowMessage('Baixa desfeita com sucesso!');
+    end;
+  end;
+end;
+
+end.

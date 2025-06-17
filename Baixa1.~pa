@@ -1,0 +1,1256 @@
+unit Baixa1;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
+  StdCtrls, Buttons, Mask, ExtCtrls, jpeg;
+
+type
+  TF_Baixa1 = class(TForm)
+    ControlBar1: TControlBar;
+    Label36: TLabel;
+    Panel1: TPanel;
+    Label1: TLabel;
+    Bevel1: TBevel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label6: TLabel;
+    Label9: TLabel;          
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    GroupBox1: TGroupBox;
+    Label2: TLabel;
+    RadioButton1: TRadioButton;
+    RadioButton2: TRadioButton;
+    RadioButton3: TRadioButton;
+    RadioButton4: TRadioButton;
+    MaskEdit1: TMaskEdit;
+    BitBtn2: TBitBtn;
+    BitBtn1: TBitBtn;
+    GroupBox2: TGroupBox;
+    Label13: TLabel;
+    Label14: TLabel;
+    MaskEdit2: TMaskEdit;
+    MaskEdit3: TMaskEdit;
+    Label16: TLabel;
+    Label17: TLabel;
+    RadioButton5: TRadioButton;
+    Label18: TLabel;
+    Label19: TLabel;
+    RadioButton6: TRadioButton;
+    Label15: TLabel;
+    RadioButton7: TRadioButton;
+    rbSubJudice: TRadioButton;
+    procedure BitBtn2Click(Sender: TObject);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure MaskEdit1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure FormActivate(Sender: TObject);
+    procedure RadioButton3Click(Sender: TObject);
+    procedure MaskEdit2KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure MaskEdit3KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+  private
+    { Private declarations }
+    procedure Def_Prazos;
+  public
+    { Public declarations }
+
+    tipo_reg,
+    v_Sql,
+    protocolooficial,
+    microfilme,
+    averbacao : String;
+    fora, cancelouRegistro : boolean;
+
+    nome_parte,
+    nome_apresentante: String;
+    cod_natureza: Integer;
+    data_recepcao: TDateTime;
+
+                                          //TipoAcao = 'I' ou 'D' ou 'E'
+    procedure InsereHistoricoDeProtocoloRegistro(TipoAcao, nome_parte, nome_apresentante, averbacao: String; protocolo, registro, cod_natureza: Integer; data_recepcao, data_baixa: TDateTime);
+  end;
+
+var
+  F_Baixa1: TF_Baixa1;
+  numeroSelo, codigoValidacao : String;
+  numeroSelo_Vias, codigoValidacao_Vias : String;
+
+implementation
+
+uses DMTD, Menu, PIrr, FuncGeral, ProcGeral, Exame, AReg, U_daje, Func;
+
+{$R *.DFM}
+
+procedure TF_Baixa1.BitBtn2Click(Sender: TObject);
+begin
+  Label2.caption := '';
+  Close;
+end;
+
+procedure TF_Baixa1.BitBtn1Click(Sender: TObject);
+var
+  selo, selo_DajeVias, validador, _cod_emissor_, certifica, rl1,
+  n_vias, folha_ini, nlivrob, sNumeroDajeVias: string;
+  registro, AverbadoAoRegistro, numeroRegistro,
+  LivroRegistro, FolhaRegistro, qtdPagRegistro: Integer;
+  Par,
+  dajes,
+  codigoCartorio,
+  funcionario,
+  numSeloFisico,
+  nomeParte,
+  numeroCertidao,
+  descricaoMotivo,
+  numeroProtocolo,
+  livro,
+  folha,
+  tipoAto,
+  diretorio,
+  motivoisencao,  
+  alias,
+  iddaje,
+  Sistema,
+  usuario: String;
+begin
+  dajes:= '';
+  codigoCartorio:= '';
+  funcionario:= '';
+  numSeloFisico:= '';
+  nomeParte:= '';
+  numeroCertidao:= '';
+  motivoisencao:= '';
+  descricaoMotivo:= '';
+  numeroProtocolo:= '';
+  livro:= '';
+  folha:= '';
+  tipoAto:= '';
+  diretorio:= '';
+  alias:= '';
+  Par:= '';
+  iddaje:= '';
+  usuario:= '';
+  Dm.isReentrada  := False;
+  validador       := '';
+  selo            := '';
+  _codigoValidacao:= '';
+  _numeroSelo     := '';
+  LivroRegistro   := 0;
+  FolhaRegistro   := 0;
+  qtdPagRegistro  := 0;
+
+
+//  F_Menu.Label54.Caption := '1-Homologação';  /// DESABILITAR QUANDO PRECISAR TESTAR SEM GERAR O SELO.
+
+
+  if (MessageBox(Handle, PChar('Confirma baixa do título ?'), 'BAIXA', MB_YESNO + MB_ICONQUESTION + MB_DEFBUTTON1) = IdYes) then
+  begin
+
+    if (RadioButton1.Checked) then
+    begin
+      //if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'EXAME', MaskEdit1.Text,'','','','','','','','','','','','','','','','','','') then
+      if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'EXAME', MaskEdit1.Text, Label5.Caption,'','','','','','','','',F_Exame.Label83.Caption,F_Exame.Label85.Caption,'',F_Exame.MaskEdit33.Text,F_Exame.MaskEdit34.Text,'','','','') then
+      begin
+        MessageBox(Handle, PChar('Volta de status realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;
+    end
+    else if (RadioButton6.Checked) then
+    begin
+      DM.isReentrada:= True;
+      if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'EXAME', MaskEdit1.Text,Label5.Caption,'','','','','','','','',F_Exame.Label83.Caption,F_Exame.Label85.Caption,'',F_Exame.MaskEdit33.Text,F_Exame.MaskEdit34.Text,'','','','') then
+      begin
+        Dm.qryGenerico.Close;
+        Dm.qryGenerico.Sql.Clear;
+        Dm.qryGenerico.Sql.Add('INSERT INTO histd');
+        Dm.qryGenerico.Sql.Add('(data, hora, protocolo, tipo, usuario, historico, status_reentrada, data_reentrada, cartorio)');
+        Dm.qryGenerico.Sql.Add('VALUES(');
+        Dm.qryGenerico.Sql.Add(QuotedStr(FormatDateTime('yyyy-mm-dd',  Date))+ ',');
+        Dm.qryGenerico.Sql.Add(QuotedStr(TimeToStr(Time))+ ',');
+        Dm.qryGenerico.Sql.Add(QuotedStr(Label3.Caption)+ ',');
+        Dm.qryGenerico.Sql.Add(QuotedStr('T')+ ',');
+        Dm.qryGenerico.Sql.Add(QuotedStr(F_Menu.Label1.Caption)+ ',');
+        Dm.qryGenerico.Sql.Add(QuotedStr('Volta de status em ') + QuotedStr( FormatDateTime('yyyy-mm-dd',  Date) ) +',');
+        Dm.qryGenerico.Sql.Add(QuotedStr('REENTRADA')+' ,');
+        Dm.qryGenerico.Sql.Add(QuotedStr( FormatDateTime('yyyy-mm-dd',  Date) )+',');
+        Dm.qryGenerico.Sql.Add(QuotedStr(f_menu.Label37.caption)+')');
+        Dm.qryGenerico.ExecSql;
+
+        F_Baixa1.Def_Prazos;
+
+        MessageBox(Handle, PChar('Volta de status realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;
+    end
+    else if (RadioButton7.Checked) then
+    begin
+      DM.isReentrada:= False;
+      begin
+        if (F_Exame.Label43.Caption = 'DEVOLVIDO PRONTO') Then
+        Begin
+          Dm.qryGenerico.Close;
+          Dm.qryGenerico.Sql.Clear;
+          Dm.qryGenerico.Sql.Add('UPDATE td SET status = '+QuotedStr('PRONTO')+' WHERE p_auxiliar = '+QuotedStr(Label3.Caption)+'');
+          Dm.qryGenerico.ExecSQL;
+          Dm.qryGenerico.Close;
+          Dm.qryGenerico.Sql.Clear;
+          Dm.qryGenerico.Sql.Add('INSERT INTO histd');
+          Dm.qryGenerico.Sql.Add('(data, hora, protocolo, tipo, usuario, historico, status_reentrada, data_reentrada, cartorio)');
+          Dm.qryGenerico.Sql.Add('VALUES(');
+          Dm.qryGenerico.Sql.Add(QuotedStr(FormatDateTime('yyyy-mm-dd',  Date))+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(TimeToStr(Time))+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(Label3.Caption)+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr('T')+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(F_Menu.Label1.Caption)+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr('Volta de status em ') + QuotedStr( FormatDateTime('yyyy-mm-dd',  Date) ) +',');
+          Dm.qryGenerico.Sql.Add(QuotedStr('REENTRADA')+' ,');
+          Dm.qryGenerico.Sql.Add(QuotedStr( FormatDateTime('yyyy-mm-dd',  Date) )+',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(f_menu.Label37.caption)+')');
+          Dm.qryGenerico.ExecSql;
+          MessageBox(Handle, PChar('Volta de status realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+          Exit;
+        End
+        Else
+        Begin
+          MessageBox(Handle, PChar('Volta de status para pronto so é permitido para titulo baixado como devolvido pronto!'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+          Exit;
+        End;
+      End
+    end
+    else if (rbSubJudice.Checked) then
+    begin
+      DM.isReentrada:= False;
+      begin
+        if (F_Exame.Label43.Caption = 'DEVOLVIDO PRONTO') Then
+        begin
+          Dm.qryGenerico.Close;
+          Dm.qryGenerico.Sql.Clear;
+          Dm.qryGenerico.Sql.Add('update td set status = '+QuotedStr('SUB JUDICE')+' WHERE p_auxiliar = '+QuotedStr(Label3.Caption)+'');
+          Dm.qryGenerico.ExecSQL;
+          Dm.qryGenerico.Close;
+          Dm.qryGenerico.Sql.Clear;
+          Dm.qryGenerico.Sql.Add('insert into histd');
+          Dm.qryGenerico.Sql.Add('(data, hora, protocolo, tipo, usuario, historico, cartorio)');
+          Dm.qryGenerico.Sql.Add('values(');
+          Dm.qryGenerico.Sql.Add(QuotedStr(FormatDateTime('yyyy-mm-dd',  Date))+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(TimeToStr(Time))+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(Label3.Caption)+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr('T')+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(F_Menu.Label1.Caption)+ ',');
+          Dm.qryGenerico.Sql.Add(QuotedStr('Volta de status em ') + QuotedStr( FormatDateTime('yyyy-mm-dd',  Date) ) +',');
+          Dm.qryGenerico.Sql.Add(QuotedStr(f_menu.Label37.caption)+')');
+          Dm.qryGenerico.ExecSql;
+          MessageBox(Handle, PChar('Volta de status realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+          Exit;
+        end
+        else
+        begin
+          MessageBox(Handle, PChar('Volta de status para Sub Judice só é permitido para titulo baixado como devolvido pronto!'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+          Exit;
+        end;
+      end
+    end
+    else if (RadioButton2.Checked) then
+    begin
+      if F_Menu.Label53.Caption = 'F' Then
+      begin
+        ShowMessage('Usuário não possui permissão para realizar a baixa do título');
+        Exit;
+      end;
+
+      {Dm.qryGenerico.Close;
+      Dm.qryGenerico.Sql.Clear;
+      Dm.qryGenerico.Sql.Add('SELECT custas, daje, serie_daje FROM td');
+      Dm.qryGenerico.Sql.Add('WHERE p_auxiliar = ' + Label3.Caption);
+      Dm.qryGenerico.Open;
+
+      Dm.Join.Close;
+      Dm.Join.SQL.Clear;
+      Dm.Join.SQL.Add('select * from daje where');
+      Dm.Join.SQL.Add('serie_daje      = ' + QuotedStr(Dm.qryGenerico.FieldByName('serie_daje').asString));
+      Dm.Join.SQL.Add('and numero_daje = ' + QuotedStr(Dm.qryGenerico.FieldByName('daje').asString)+' and status <> '+QuotedStr('Isento')+'');
+      Dm.Join.Open;
+      Dm.Join.Last;
+
+      if (Not(Dm.Join.IsEmpty)) Then
+      Begin
+        if (Dm.qryGenerico.FieldByName('custas').AsCurrency <> Dm.Join.FieldByName('vr_daje').AsCurrency) then
+        begin
+          if Application.MessageBox(PChar('As Custas do protocolo encontra-se diferente da tabela DAJE. Deseja continuar ?'), PChar('Exame do Título'), MB_ICONQUESTION + MB_YESNO) = ID_NO then
+            Exit;
+        end;
+      End; }
+      protocolooficial := Label3.Caption;
+      n_vias           := Label15.Caption;
+      //microfilme       := '';
+      certifica        := '';
+      rl1              := '';
+      fora             := false;
+      if (StrToInt(Label16.Caption) > 0) then
+      begin
+        folha_ini := Label16.Caption;
+        nlivrob   := Label17.Caption;
+      end
+      else
+      begin
+        folha_ini := '0';
+        nlivrob   := '0';
+      end;
+      if (StrToInt(Label5.Caption) = 0) then
+      begin
+        if (tipo_reg = 'Av.') then  {Solicita digitação do registro no caso de averbação}
+        begin
+          if IDYES = Application.MessageBox(PChar('Confirmar o registro referente à averbação?'), PChar('Baixa'),MB_YESNO + MB_ICONQUESTION) then
+          begin                // Averbacao
+            if (Not(ModalidadeAverbacaoCapital)) Then
+            Begin
+              Application.CreateForm(TF_AReg, F_AReg);
+              cancelouRegistro := False;
+              F_AReg.ShowModal;
+              if cancelouRegistro then
+                Exit;
+              microfilme       := F_AReg.Maskedit1.Text;
+              protocolooficial := F_AReg.Maskedit1.Text;
+              averbacao        := F_AReg.Maskedit2.Text;
+            End;
+
+            //Verificar se já existe o registro
+            Dm.ArqAux.Close;
+            Dm.ArqAux.Sql.Clear;
+            Dm.ArqAux.Sql.Add('SELECT registro FROM td');
+            Dm.ArqAux.Sql.Add(' WHERE registro = ' + QuotedStr(microfilme));
+            Dm.ArqAux.Sql.Add(' AND averba = ' + QuotedStr(averbacao));
+            if (F_Exame.CheckBox3.Checked) then
+              Dm.ArqAux.Sql.Add(' AND lvc = "X"')
+            else if (F_Exame.CheckBox12.Checked) then
+              Dm.ArqAux.Sql.Add(' AND lvf = "X"')
+            Else
+              Dm.ArqAux.Sql.Add(' AND lvb = "X"');
+            Dm.ArqAux.Open;
+            if (Dm.ArqAux.recordcount <> 0) then
+            begin
+              MessageBox(Handle, PChar('Por favor, verifique a sequencia do registro, DUPLICIDADE.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONWARNING);
+              Abort;   //Averbacao
+              if (Not(ModalidadeAverbacaoCapital)) Then
+              begin
+                Application.CreateForm(TF_AReg, F_AReg);
+                F_Areg.Maskedit1.Text := '';
+                F_AReg.Maskedit1.Text := microfilme;
+                F_AReg.Maskedit2.Text := averbacao;
+                cancelouRegistro := False;
+                F_AReg.ShowModal;
+                if cancelouRegistro then
+                  Exit;
+                microfilme       := F_AReg.Maskedit1.Text;
+                protocolooficial := F_AReg.Maskedit1.Text;
+                averbacao        := F_AReg.Maskedit2.Text;
+                F_AReg.Destroy;
+                F_AReg := Nil;
+              End;
+            end;
+            InsereHistoricoDeProtocoloRegistro('I', nome_parte, nome_apresentante, averbacao, StrToInt(Label3.Caption), StrToInt(microfilme), cod_natureza, data_recepcao, StrToDateTime(MaskEdit1.Text));
+
+            Dm.ArqAux.Close;
+          end;
+        end
+        else
+        begin
+          if False then
+          begin
+            if Label5.Caption <> '' Then
+            Begin
+              registro:= strtoint(Label5.Caption);
+              if ( registro <= 0) Then
+                numeroRegistro:= ExistirRegistroAnteriores(0);
+            End;
+            if (numeroRegistro = 0) Then
+            Begin
+              GerarSequencias(True, Fora, False, False, False, False, strtoint(Label5.Caption));
+              rl1              := digi(NRL);
+              certifica        := NCert;
+              microfilme       := NMicro;
+              protocolooficial := NMicro;
+            End
+            Else
+            Begin
+              microfilme:= inttostr(numeroRegistro);
+              protocolooficial := inttostr(numeroRegistro);
+            End;
+          end
+          else
+          begin
+            //if (Label11.Caption = '2') then
+            {if False then
+            begin
+              GerarSequencias(False, Fora, True, False, False);
+              microfilme       := NMicro;
+              certifica        := NCert;
+              protocolooficial := NMicro;
+            end
+            else
+            begin
+              //If Label18.Caption = '6003' then
+              if F_Exame.CheckBox3.Checked and v_chk_20 then
+                GerarSequencias(False, Fora, False, False, True)
+              else
+                GerarSequencias(False, Fora, False, False, False);
+
+              microfilme       := NMicro;
+              protocolooficial := NMicro;
+              certifica        := '';
+            end;}
+          end;
+        end;
+      end
+      else
+      begin
+        protocolooficial := Label5.Caption;
+        rl1              := Label10.Caption;
+        certifica        := Label9.Caption;
+        microfilme       := Label5.Caption;
+        n_vias           := Label15.Caption;
+      end;
+
+      //pegar o selo aqui
+      if (not GroupBox2.Visible) then
+      begin
+        Dm.ArqAux.Close;
+        Dm.ArqAux.Sql.Clear;
+        Dm.ArqAux.Sql.Add('SELECT * FROM td');
+        Dm.ArqAux.Sql.Add('WHERE p_auxiliar = ' + Label3.Caption);
+        Dm.ArqAux.Open;
+
+        if (Dm.ArqAux.recordcount <> 0) then
+        begin
+          Dm.ArqAux1.Close;
+          Dm.ArqAux1.Sql.Clear;
+          Dm.ArqAux1.Sql.Add('SELECT * FROM daje');
+          Dm.ArqAux1.Sql.Add('WHERE serie_daje = ' + QuotedStr(Dm.ArqAux.FieldByName('serie_daje').AsString));
+          Dm.ArqAux1.Sql.Add('and numero_daje = ' + QuotedStr(Dm.ArqAux.FieldByName('daje').AsString));
+          Dm.ArqAux1.Open;
+
+          Dm.qryGenerico.Close;
+          Dm.qryGenerico.Sql.Clear;
+          Dm.qryGenerico.Sql.Add('SELECT * FROM daje');
+          Dm.qryGenerico.Sql.Add('WHERE serie_daje = ' + QuotedStr(Dm.ArqAux1.FieldByName('serie_daje_complementar').AsString));
+          Dm.qryGenerico.Sql.Add('and numero_daje = ' + QuotedStr(Dm.ArqAux1.FieldByName('numero_daje_complementar').AsString));
+          Dm.qryGenerico.Open;
+
+          _cod_emissor_ := id_eselo;
+
+          if (Dm.ArqAux1.FieldByname('iddaje_tj').AsString = '9999') then
+            _cod_emissor_ := '9999';
+
+          if (Dm.ArqAux1.FieldByname('iddaje_tj').AsString = '') then
+            _cod_emissor_ := id_eselo;
+
+          if (Dm.ArqAux1.FieldByname('iddaje_tj').AsString <> '') then
+            _cod_emissor_ := Dm.ArqAux1.FieldByname('iddaje_tj').AsString;
+
+            if Dm.ArqAux1.FieldByName('numero_daje_complementar').AsString <> '' Then
+            Begin
+              //selo := SeloComDaje(Dm.qryGenerico.FieldByName('iddaje_tj').AsString, F_Menu.Label25.Caption, Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString, Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString, Dm.qryGenerico.FieldByName('iddaje_tj').AsString + Dm.ArqAux1.FieldByName('serie_daje_complementar').AsString + Strzero(Dm.ArqAux1.FieldByName('numero_daje_complementar').AsString,6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.qryGenerico.FieldByName('contribuinte').AsString, Dm.qryGenerico.FieldByName('iddaje_tj').AsString)
+              if ((F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '')) Then
+              begin
+                                                  {Inicio da rotina de selo com QRCode}
+                IF (TrabalhaComQRCode) Then //Eder de Valença
+                begin
+                  dajes              := Strzero(_cod_emissor_,4) + StrZero(Dm.ArqAux1.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.ArqAux1.FieldByName('numero_daje').AsString, 6);
+                  codigoCartorio     := Strzero(_cod_emissor_,4);
+                  funcionario        := F_Menu.Label1.Caption;
+                  numSeloFisico      := '';
+                  nomeParte          := Dm.ArqAux1.FieldByName('contribuinte').AsString;
+                  numeroCertidao     := '';
+                  descricaoMotivo    := Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString;
+                  numeroProtocolo    := '0';
+                  livro              := ''; //Não levar aspas
+                  folha              := ''; //Não levar aspas
+                  tipoAto            := '0';                
+                  diretorio          := caminho_imgselo;
+                  alias              := 'dbtd';
+                  motivoisencao      := Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString;
+                  iddaje             := Dm.ArqAux1.FieldByName('id').AsString;
+                  Sistema            := 'TD';
+                  usuario            := '';
+
+                  if motivoisencao <> '' then
+                  begin
+                    Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                   numeroCertidao+';'+descricaoMotivo+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+motivoisencao+';'+iddaje+';'+Sistema+';';
+                  end
+                  else
+                  begin
+                    Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                   numeroCertidao+';'+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+';'+iddaje+';'+Sistema+';';
+                  end;
+
+
+                  Dm.KillTask(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe');
+                  WinExec(pchar(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe'+' '+Par), SW_NORMAL);
+                  F_Exame.Memo1.Lines.Add(Par);
+                  F_Exame.Memo1.Lines.SaveToFile(F_Menu.LbCaminhoDajeIntegracao.Caption+'Logdajeintegracao.txt');
+                  dm.qryGenerico.Close;
+                  dm.qryGenerico.SQL.Clear;
+                  dm.qryGenerico.SQL.Add('select numero_selo, cod_validacao, usuario from daje where id in (' + iddaje + ') group by 1');
+                  dm.qryGenerico.Open;
+                  _codigoValidacao:= dm.qryGenerico.FieldByName('cod_validacao').AsString;
+                  _numeroSelo     := dm.qryGenerico.FieldByName('numero_selo').AsString;
+                  usuario         := dm.qryGenerico.FieldByName('usuario').AsString;
+
+                  if _numeroSelo <> '' then
+                    Application.MessageBox(Pchar('Selo: ' + _numeroSelo + ' Código de Validação: ' + _codigoValidacao), 'GERADO COM SUCESSO', Mb_IconInformation)
+                  else
+                    Application.MessageBox(Pchar('Selo não pode ser gerado!'), 'GERADO COM SUCESSO', Mb_IconInformation);
+                {Fim da rotina de selo com QRCode}
+                end
+                else
+                begin
+                  selo := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString, Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + StrZero(Dm.ArqAux1.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.ArqAux1.FieldByName('numero_daje').AsString, 6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.qryGenerico.FieldByName('contribuinte').AsString, _cod_emissor_)
+                end;
+              end
+              else
+              begin
+                _codigoValidacao:= 'selo teste';
+                _numeroSelo:= 'validacao teste';
+              end;
+            End
+            Else
+            Begin
+              if ((F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '')) Then
+              begin
+                                                  {Inicio da rotina de selo com QRCode}
+                if false then //(TrabalhaComQRCode) Then //Eder de Valença
+                begin
+                  dajes              := Strzero(_cod_emissor_,4) + StrZero(Dm.ArqAux1.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.ArqAux1.FieldByName('numero_daje').AsString, 6);
+                  codigoCartorio     := Strzero(_cod_emissor_,4);
+                  funcionario        := F_Menu.Label1.Caption;
+                  numSeloFisico      := '';
+                  nomeParte          := Dm.ArqAux1.FieldByName('contribuinte').AsString;
+                  numeroCertidao     := '';
+                  descricaoMotivo    := Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString;
+                  numeroProtocolo    := '0';
+                  livro              := ''; //Não levar aspas
+                  folha              := ''; //Não levar aspas
+                  tipoAto            := '0';
+                  diretorio          := caminho_imgselo;
+                  alias              := 'dbtd';
+                  motivoisencao      := Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString;
+                  iddaje             := Dm.ArqAux1.FieldByName('id').AsString;
+                  Sistema            := 'TD';
+                  usuario            := '';
+
+                  if motivoisencao <> '' then
+                  begin
+                    Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                   numeroCertidao+';'+descricaoMotivo+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+motivoisencao+';'+iddaje+';'+Sistema+';';
+                  end
+                  else
+                  begin
+                    Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                   numeroCertidao+';'+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+';'+iddaje+';'+Sistema+';';
+
+
+                  end;
+
+                  Dm.KillTask(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe');
+                  WinExec(pchar(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe'+' '+Par), SW_NORMAL);
+
+                  F_Exame.Memo1.Lines.Add(Par);
+                  F_Exame.Memo1.Lines.SaveToFile(F_Menu.LbCaminhoDajeIntegracao.Caption+'Logdajeintegracao.txt');
+
+                  dm.qryGenerico.Close;
+                  dm.qryGenerico.SQL.Clear;
+                  dm.qryGenerico.SQL.Add('select numero_selo, cod_validacao, usuario from daje where id in (' + quotedstr(iddaje) + ') group by 1');
+                  dm.qryGenerico.Open;
+
+                  _codigoValidacao:= dm.qryGenerico.FieldByName('cod_validacao').AsString;
+                  _numeroSelo     := dm.qryGenerico.FieldByName('numero_selo').AsString;
+                  usuario         := F_Menu.Label1.Caption;
+
+                  if _numeroSelo <> '' then
+                    Application.MessageBox(Pchar('Selo: ' + _numeroSelo + ' Código de Validação: ' + _codigoValidacao), 'GERADO COM SUCESSO', Mb_IconInformation)
+                  else
+                  Application.MessageBox(Pchar('Selo não pode ser gerado!'), 'GERADO COM SUCESSO', Mb_IconInformation);
+
+                {Fim da rotina de selo com QRCode}
+
+                End
+                Else
+                Begin
+                  selo := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString, Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + Dm.ArqAux.FieldByName('serie_daje').AsString + StrZero(Dm.ArqAux.FieldByName('daje').AsString,6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.ArqAux1.FieldByName('contribuinte').AsString, _cod_emissor_);
+                End;
+              End
+              Else
+              Begin
+                _codigoValidacao:= 'selo teste';
+                _numeroSelo:= 'validacao teste';
+              End
+            End;
+          //2TD
+          validador := _codigoValidacao; //Copy(selo, Pos('|', selo) + 1, Length(selo) - Pos('|', selo) - 1);
+          selo      := _numeroSelo; //Copy(selo, 1, Length(selo) - Length(validador) - 2);
+
+          If selo <> '' Then
+          Begin
+            If (F_Menu.livroAutomatico) Then  //Sequencia automática
+            begin
+              if (F_Exame.MaskEdit35.Text <> '') or (F_Exame.MaskEdit35.Text <> '0') Then
+                qtdPagRegistro:= StrToInt(F_Exame.MaskEdit35.Text)
+              else
+                qtdPagRegistro:= 0;        //livro automatico
+
+              if (Not(F_Exame.CheckBox8.Checked)) and (Not(F_Exame.CheckBox7.Checked)) and (Not(F_Exame.CheckBox12.Checked)) Then
+              begin
+                ShowMessage('Informe o livro de registro para que o sistema possa gerar a numeração automática!');
+                Abort;
+              end;
+              {if (F_Menu.Label39.Caption = '28.287.131/0001-10') or (F_Menu.Label39.Caption = '28287131000110') or
+                (F_Menu.Label39.Caption = '28.508.639/0001-00') or (F_Menu.Label39.Caption = '28508639000100') or
+                (F_Menu.Label39.Caption = '27.215.296/0001-14') or (F_Menu.Label39.Caption = '27215296000114') or
+                (F_Menu.Label39.Caption = '29.603.272/0001-68') or (F_Menu.Label39.Caption = '29603272000168') or
+                (F_Menu.Label39.Caption = '01.221.489/0001-94') or (F_Menu.Label39.Caption = '01221489000194') or
+                (F_Menu.Label39.Caption = '27.251.207/0001-95') or (F_Menu.Label39.Caption = '27251207000195') or
+                (F_Menu.Label39.Caption = '28.344.918/0001-77') or (F_Menu.Label39.Caption = '28344918000177') or
+                (F_Menu.Label39.Caption = '27.400.369/0001-48') or (F_Menu.Label39.Caption = '27400369000148') or
+                (F_Menu.Label39.Caption = '28.664.048/0001-13') or (F_Menu.Label39.Caption = '28664048000113') or
+                (F_Menu.Label39.Caption = '29.649.551/0001-62') or (F_Menu.Label39.Caption = '29649551000162') or
+                (F_Menu.Label39.Caption = '27.146.890/0001-09') or (F_Menu.Label39.Caption = '27146890000109') or
+                (F_Menu.Label39.Caption = '27.282.471/0001-96') or (F_Menu.Label39.Caption = '27282471000196') then
+              begin}
+                if (F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '1-Homologação') Then
+                begin
+                  if (F_Exame.CheckBox12.Checked) then // Livro F
+                  Begin
+                  //GerarSequencias(False, Fora, False, False, False, True, strtoint(Label5.Caption));
+                  End
+                  Else if (F_Exame.MaskEdit33.Text = '0') and (F_Exame.MaskEdit34.Text = '0') Then
+                  begin
+                    Dm.GerarNumeroFolhaAutomatico(qtdPagRegistro, strtoint(Label3.Caption), False, True, False, True, False, LivroRegistro, FolhaRegistro);  // Colocar para pegar a informação de livro automatico ou não da configur
+                    F_Exame.MaskEdit33.Text:= IntToStr(LivroRegistro);
+                    F_Exame.MaskEdit34.Text:= IntToStr(FolhaRegistro);
+                  end;
+                end;
+              //end;
+            end;
+          end;
+
+          //Checando se o campo daje vias está preenchido para gerar o selo
+          //if (Dm.ArqAux.FieldByName('serie_vias').AsString <> '') and (Dm.ArqAux.FieldByName('dajevias').AsString <> '') Then
+          Begin
+           { Dm.ArqAux1.Close;
+            Dm.ArqAux1.Sql.Clear;
+            Dm.ArqAux1.Sql.Add('SELECT * FROM daje');
+            Dm.ArqAux1.Sql.Add('WHERE serie_daje = ' + QuotedStr(Dm.ArqAux.FieldByName('serie_vias').AsString));
+            Dm.ArqAux1.Sql.Add('and numero_daje = ' + QuotedStr(Dm.ArqAux.FieldByName('dajevias').AsString));
+            Dm.ArqAux1.Open;
+            _cod_emissor_ := id_eselo;
+
+            if (Dm.ArqAux1.FieldByname('iddaje_tj').AsString = '9999') then
+              _cod_emissor_ := '9999';
+
+            TipoDeDajeForDajeVias:= True;
+
+            if Dm.ArqAux1.FieldByName('numero_daje_complementar').AsString <> '' Then
+              selo := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString, Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + Dm.ArqAux1.FieldByName('serie_daje_complementar').AsString + Strzero(Dm.ArqAux1.FieldByName('numero_daje_complementar').AsString,6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.ArqAux1.FieldByName('contribuinte').AsString, _cod_emissor_)
+            else
+            selo_DajeVias := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.ArqAux1.FieldByName('cod_motivo_isento').AsString, Dm.ArqAux1.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + Dm.ArqAux.FieldByName('serie_vias').AsString + Strzero(Dm.ArqAux.FieldByName('dajevias').AsString, 6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.ArqAux1.FieldByName('contribuinte').AsString, _cod_emissor_);
+            }
+
+            Dm.qryGenerico.Close;
+            Dm.qryGenerico.SQL.Clear;
+            Dm.qryGenerico.SQL.Add('select * from selos where recibo = '+QuotedStr(Label3.Caption)+'');
+            Dm.qryGenerico.Open;
+
+            if Dm.qryGenerico.FieldByName('daje').AsString = '000000' Then
+            begin
+              Dm.qryGenerico.Close;
+              Dm.qryGenerico.SQL.Clear;
+              Dm.qryGenerico.SQL.Add('delete from selos where recibo = '+QuotedStr(Label3.Caption)+'');
+              Dm.qryGenerico.ExecSQL;
+            end;
+
+
+            Dm.qryGenerico.Close;
+            Dm.qryGenerico.SQL.Clear;
+            Dm.qryGenerico.SQL.Add('select * from selos where recibo = '+QuotedStr(Label3.Caption)+'');
+            Dm.qryGenerico.Open;
+
+            if Dm.qryGenerico.RecordCount > 0 Then
+            Begin
+              TipoDeDajeForDajeVias:= True;
+              Dm.qryGenerico.First;
+              while not Dm.qryGenerico.eof do
+              Begin
+                Dm.qryGenerico_Aux.Close;
+                Dm.qryGenerico_Aux.Sql.Clear;
+                Dm.qryGenerico_Aux.Sql.Add('SELECT * FROM daje');
+                Dm.qryGenerico_Aux.Sql.Add('WHERE serie_daje = ' + QuotedStr(Dm.qryGenerico.FieldByName('serie_daje').AsString));
+                Dm.qryGenerico_Aux.Sql.Add('and numero_daje = ' + QuotedStr(Dm.qryGenerico.FieldByName('daje').AsString));
+                Dm.qryGenerico_Aux.Open;
+
+                Dm.qryGenerico_Auxiliar3.Close;
+                Dm.qryGenerico_Auxiliar3.Sql.Clear;
+                Dm.qryGenerico_Auxiliar3.Sql.Add('SELECT iddaje_tj FROM daje');
+                Dm.qryGenerico_Auxiliar3.Sql.Add('WHERE serie_daje = ' + QuotedStr(Dm.qryGenerico_Aux.FieldByName('serie_daje_complementar').AsString));
+                Dm.qryGenerico_Auxiliar3.Sql.Add('and numero_daje = ' + QuotedStr(Dm.qryGenerico_Aux.FieldByName('numero_daje_complementar').AsString));
+                Dm.qryGenerico_Auxiliar3.Open;
+
+
+                if (Dm.qryGenerico_Aux.FieldByname('iddaje_tj').AsString = '9999') then
+                  _cod_emissor_ := '9999'
+                else
+                  _cod_emissor_ := Dm.qryGenerico_Aux.FieldByname('iddaje_tj').AsString;
+
+                if (Dm.qryGenerico_Aux.FieldByName('numero_daje_complementar').AsString) <> '' Then
+                Begin
+                  if (Dm.qryGenerico_Auxiliar3.FieldByName('iddaje_tj').AsString <> '') Then
+                  Begin
+                    if ((F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '')) Then
+                    begin
+                      IF (TrabalhaComQRCode) Then //Eder de Valença
+                      begin
+                        dajes              := Strzero(Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString,4)+ StrZero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6);
+                        codigoCartorio     := Strzero(_cod_emissor_,4);
+                        funcionario        := F_Menu.Label1.Caption;
+                        numSeloFisico      := '';
+                        nomeParte          := Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString;
+                        numeroCertidao     := '';
+                        descricaoMotivo    := Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString;
+                        numeroProtocolo    := '0';
+                        livro              := ''; //Não levar aspas
+                        folha              := ''; //Não levar aspas
+                        tipoAto            := '0';
+                        diretorio          := caminho_imgselo;
+                        alias              := 'dbtd';
+                        motivoisencao      := Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString;
+                        iddaje             := Dm.qryGenerico_Aux.FieldByName('id').AsString;
+                        Sistema            := 'TD';
+                        usuario            := '';
+
+                        if motivoisencao <> '' then
+                        begin
+                          Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                              numeroCertidao+';'+descricaoMotivo+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+motivoisencao+';'+iddaje+';'+Sistema+';';
+                        end
+                        else
+                        begin
+                          Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                              numeroCertidao+';'+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+';'+iddaje+';'+Sistema+';';
+                        end;
+
+                        Dm.KillTask(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe');
+                        WinExec(pchar(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe'+' '+Par), SW_NORMAL);
+
+                        F_Exame.Memo1.Lines.Add(Par);
+                        F_Exame.Memo1.Lines.SaveToFile(F_Menu.LbCaminhoDajeIntegracao.Caption+'Logdajeintegracao.txt');
+
+
+                        dm.qryGenerico_Auxiliar4.Close;
+                        dm.qryGenerico_Auxiliar4.SQL.Clear;
+                        dm.qryGenerico_Auxiliar4.SQL.Add('select numero_selo, cod_validacao, usuario from daje where id in (' + iddaje + ') group by 1');
+                        dm.qryGenerico_Auxiliar4.Open;
+
+                        _codigoValidacao:= dm.qryGenerico_Auxiliar4.FieldByName('cod_validacao').AsString;
+                        _numeroSelo     := dm.qryGenerico_Auxiliar4.FieldByName('numero_selo').AsString;
+                        usuario         := dm.qryGenerico_Auxiliar4.FieldByName('usuario').AsString;
+
+                        if _numeroSelo <> '' then
+                          Application.MessageBox(Pchar('Selo: ' + _numeroSelo + ' Código de Validação: ' + _codigoValidacao), 'GERADO COM SUCESSO', Mb_IconInformation)
+                        else
+                        Application.MessageBox(Pchar('Selo não pode ser gerado!'), 'GERADO COM SUCESSO', Mb_IconInformation);
+
+                      End
+                      Else
+                      Begin
+                        selo_DajeVias := SeloComDaje(Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString, F_Menu.Label25.Caption, Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString, Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString, Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString + Strzero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + Strzero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString, Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString)
+                      End
+                  end
+                  else
+                  begin
+                    selo:= 'selo teste';
+                    validador:= 'selo teste';
+                  end;
+                End
+                else
+                Begin
+                  if ((F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '')) Then
+                  begin
+                    IF (TrabalhaComQRCode) Then //Eder de Valença
+                    begin
+
+                      dajes              := Strzero(Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString,4) + StrZero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6);
+                      codigoCartorio     := Strzero(_cod_emissor_,4);
+                      funcionario        := F_Menu.Label1.Caption;
+                      numSeloFisico      := '';
+                      nomeParte          := Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString;
+                      numeroCertidao     := '';
+                      descricaoMotivo    := Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString;
+                      numeroProtocolo    := '0';
+                      livro              := ''; //Não levar aspas
+                      folha              := ''; //Não levar aspas
+                      tipoAto            := '0';
+                      diretorio          := caminho_imgselo;
+                      alias              := 'dbtd';
+                      motivoisencao      := Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString;
+                      iddaje             := Dm.qryGenerico_Aux.FieldByName('id').AsString;
+                      Sistema            := 'TD';
+                      usuario            := '';
+
+                      if motivoisencao <> '' then
+                      begin
+                        Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                            numeroCertidao+';'+descricaoMotivo+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+motivoisencao+';'+iddaje+';'+Sistema+';';
+                      end
+                      else
+                      begin
+                        Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                            numeroCertidao+';'+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+';'+iddaje+';'+Sistema+';';
+                      end;
+
+                      Dm.KillTask(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe');
+                      WinExec(pchar(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe'+' '+Par), SW_NORMAL);
+
+                      F_Exame.Memo1.Lines.Add(Par);
+                      F_Exame.Memo1.Lines.SaveToFile(F_Menu.LbCaminhoDajeIntegracao.Caption+'Logdajeintegracao.txt');
+
+                      dm.qryGenerico_Auxiliar4.Close;
+                      dm.qryGenerico_Auxiliar4.SQL.Clear;
+                      dm.qryGenerico_Auxiliar4.SQL.Add('select numero_selo, cod_validacao, usuario from daje where id in (' + iddaje + ') group by 1');
+                      dm.qryGenerico_Auxiliar4.Open;
+
+                      _codigoValidacao:= dm.qryGenerico_Auxiliar4.FieldByName('cod_validacao').AsString;
+                      _numeroSelo     := dm.qryGenerico_Auxiliar4.FieldByName('numero_selo').AsString;
+                      usuario         := dm.qryGenerico_Auxiliar4.FieldByName('usuario').AsString;
+
+                      if _numeroSelo <> '' then
+                        Application.MessageBox(Pchar('Selo: ' + _numeroSelo + ' Código de Validação: ' + _codigoValidacao), 'GERADO COM SUCESSO', Mb_IconInformation)
+                      else
+                      Application.MessageBox(Pchar('Selo não pode ser gerado!'), 'GERADO COM SUCESSO', Mb_IconInformation);
+
+                    End
+                    Else
+                    Begin
+                      selo_DajeVias := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString, Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + Strzero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + Strzero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString, _cod_emissor_);
+                    End
+                  end
+                  else
+                  begin
+                    selo:= 'selo teste';
+                    validador:= 'selo teste';
+                  end;
+                End;
+              End
+                Else
+                if ((Dm.qryGenerico_Aux.FieldByName('numero_selo').AsString = '') or (Dm.qryGenerico_Aux.FieldByName('numero_selo').isNull)) Then
+                Begin
+                  if ((F_Menu.Label54.Caption = '1-Produção') or (F_Menu.Label54.Caption = '')) Then
+                  begin
+
+                    IF (TrabalhaComQRCode) Then //Eder de Valença
+                    begin
+
+                      dajes              := Strzero(Dm.qryGenerico_Aux.FieldByName('iddaje_tj').AsString,4) + StrZero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + StrZero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6);
+                      codigoCartorio     := Strzero(_cod_emissor_,4);
+                      funcionario        := F_Menu.Label1.Caption;
+                      numSeloFisico      := '';
+                      nomeParte          := Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString;
+                      numeroCertidao     := '';
+                      descricaoMotivo    := Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString;
+                      numeroProtocolo    := '0';
+                      livro              := ''; //Não levar aspas
+                      folha              := ''; //Não levar aspas
+                      tipoAto            := '0';
+                      diretorio          := caminho_imgselo;
+                      alias              := 'dbtd';
+                      motivoisencao      := Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString;
+                      iddaje             := Dm.qryGenerico_Aux.FieldByName('id').AsString;
+                      Sistema            := 'TD';
+                      usuario            := '';
+
+                      if motivoisencao <> '' then
+                      begin
+                        Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                            numeroCertidao+';'+descricaoMotivo+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+motivoisencao+';'+iddaje+';'+Sistema+';';
+                      end
+                      else
+                      begin
+                        Par              := 'Q;'+dajes+';'+codigoCartorio+';'+funcionario+';'+numSeloFisico+';'+nomeParte+';'+
+                                            numeroCertidao+';'+';'+numeroProtocolo+';'+livro+';'+folha+';'+tipoAto+';'+diretorio+';'+alias+';'+';'+iddaje+';'+Sistema+';';
+                      end;
+
+                      Dm.KillTask(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe');
+                      WinExec(pchar(F_Menu.LbCaminhoDajeIntegracao.Caption+'Daje.exe'+' '+Par), SW_NORMAL);
+                      
+                      F_Exame.Memo1.Lines.Add(Par);
+                      F_Exame.Memo1.Lines.SaveToFile(F_Menu.LbCaminhoDajeIntegracao.Caption+'Logdajeintegracao.txt');
+
+                      dm.qryGenerico_Auxiliar4.Close;
+                      dm.qryGenerico_Auxiliar4.SQL.Clear;
+                      dm.qryGenerico_Auxiliar4.SQL.Add('select numero_selo, cod_validacao, usuario from daje where id in (' + iddaje + ') group by 1');
+                      dm.qryGenerico_Auxiliar4.Open;
+
+                      _codigoValidacao:= dm.qryGenerico_Auxiliar4.FieldByName('cod_validacao').AsString;
+                      _numeroSelo     := dm.qryGenerico_Auxiliar4.FieldByName('numero_selo').AsString;
+                      usuario         := dm.qryGenerico_Auxiliar4.FieldByName('usuario').AsString;
+
+                      if _numeroSelo <> '' then
+                        Application.MessageBox(Pchar('Selo: ' + _numeroSelo + ' Código de Validação: ' + _codigoValidacao), 'GERADO COM SUCESSO', Mb_IconInformation)
+                      else
+                      Application.MessageBox(Pchar('Selo não pode ser gerado!'), 'GERADO COM SUCESSO', Mb_IconInformation);
+
+                    End
+                    Else
+                    Begin
+                      selo_DajeVias := SeloComDaje(_cod_emissor_, F_Menu.Label25.Caption, Dm.qryGenerico_Aux.FieldByName('cod_motivo_isento').AsString, Dm.qryGenerico_Aux.FieldByName('desc_motivo_isento').AsString, _cod_emissor_ + Strzero(Dm.qryGenerico_Aux.FieldByName('serie_daje').AsString, 3) + Strzero(Dm.qryGenerico_Aux.FieldByName('numero_daje').AsString, 6), '', '', protocolooficial, Dm.ArqAux.FieldByName('folha').AsString, Dm.ArqAux.FieldByName('livro').AsString, Dm.qryGenerico_Aux.FieldByName('contribuinte').AsString, _cod_emissor_);
+                    End
+                  end
+                  else
+                  begin
+                    selo:= 'selo teste';
+                    validador:= 'selo teste';
+                  end;
+                End;
+
+                Dm.qryGenerico.Next;
+              End;
+            End;
+
+            TipoDeDajeForDajeVias:= False;
+          End;
+
+        end;
+        Dm.ArqAux.Close;
+      end;
+      AverbadoAoRegistro:= strtoint(protocolooficial);
+      if ((selo <> '') and (selo <> '0')) or (GroupBox2.Visible) Then
+      begin
+        // 2TD
+        if validador = '' Then
+          validador := _codigoValidacao; //Copy(selo, Pos('|', selo) + 1, Length(selo) - Pos('|', selo) - 1);
+        if selo = '' Then
+          selo      := _numeroSelo; //Copy(selo, 1, Length(selo) - Length(validador) - 2);
+
+        if (tipo_reg <> 'Av.') then
+        begin
+          if Label5.Caption <> '' Then
+          begin
+            registro:= strtoint(Label5.Caption);
+            if ( registro <= 0) Then
+              numeroRegistro:= ExistirRegistroAnteriores(0);
+          end;
+          if (numeroRegistro = 0) Then
+          begin
+            if (F_Exame.CheckBox12.Checked) then // Livro F
+            Begin
+              GerarSequencias(False, Fora, False, False, False, True, strtoint(Label5.Caption));
+            End
+            Else if (F_Exame.CheckBox3.Checked and v_chk_20) then
+              GerarSequencias(False, Fora, False, False, True, False, strtoint(Label5.Caption))
+            else
+            begin
+              if (F_Exame.CheckBox7.Checked and v_chk_20) Then //Registro livro C
+                GerarSequencias(False, Fora, False, False, True, False, strtoint(Label5.Caption))
+              else
+                GerarSequencias(False, Fora, False, False, False, False, strtoint(Label5.Caption));
+            end;
+          end
+          else
+          begin
+            NMicro := inttostr(numeroRegistro);
+          end;
+
+          microfilme       := NMicro;
+          protocolooficial := NMicro;
+          certifica        := '';
+        End
+        Else
+        Begin
+          if (numeroRegistro = 0) Then
+          Begin
+            if (Not(ModalidadeAverbacaoCapital)) Then
+            Begin
+              if (F_Exame.CheckBox3.Checked) and (v_chk_20) then
+                GerarSequencias(False, Fora, False, False, True, False, AverbadoAoRegistro)
+              Else if (F_Exame.CheckBox12.Checked) then
+                GerarSequencias(False, Fora, False, False, False, True, AverbadoAoRegistro)
+              Else
+                GerarSequencias(False, Fora, False, False, False, False, AverbadoAoRegistro);
+            End
+            Else
+            Begin
+              if (F_Exame.CheckBox3.Checked) and (v_chk_20) then
+                GerarSequencias(False, Fora, False, False, True, False, strtoint(Label5.Caption))
+              Else if (F_Exame.CheckBox12.Checked) then
+                GerarSequencias(False, Fora, False, False, False, True, strtoint(Label5.Caption))
+              Else
+                GerarSequencias(False, Fora, False, False, False, False, strtoint(Label5.Caption));
+            End;
+          End
+          Else
+            NMicro := inttostr(numeroRegistro);
+
+          microfilme       := NMicro;
+          protocolooficial := NMicro;
+          certifica        := '';
+        End;
+
+        //if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'PRONTO', MaskEdit1.Text, protocolooficial, microfilme, rl1, '', certifica, '', '', MaskEdit2.Text, MaskEdit3.Text, selo, validador, n_vias,nlivrob,folha_ini,n_vias,Label18.Caption,Label19.Caption, averbacao) then
+        if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'PRONTO', MaskEdit1.Text, protocolooficial, microfilme, rl1, '', certifica, '', '', MaskEdit2.Text, MaskEdit3.Text, selo, validador, n_vias,F_Exame.MaskEdit39.Text,F_Exame.MaskEdit40.Text,n_vias,Label18.Caption,Label19.Caption, averbacao) then
+        begin
+          MessageBox(Handle, PChar('Baixa de REGISTRO realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+          v_Sql := '';
+          v_Sql := ' select status from td where p_auxiliar = '+trim(MaskEdit1.Text);
+          if F_Exame.VerificaStatusDoTitulo(v_Sql) = 'PRONTO' then
+          begin
+            F_Exame.BitBtn8.Enabled := true;
+            v_Sql := '';
+            v_Sql := ' select liberado from td where p_auxiliar = '+trim(MaskEdit1.Text);
+            if F_Exame.VerificaSeTituloLiberado(v_Sql) = 'S' then
+              F_Exame.BitBtn8.Caption := 'Bloquear'
+            else
+              F_Exame.BitBtn8.Caption := 'Liberar';
+          end
+          else
+            F_Exame.BitBtn8.Enabled := false;
+          BitBtn1.Enabled := False;
+          BitBtn2.SetFocus;
+        end;
+      end
+      else
+      begin
+        MessageBox(Handle, PChar('Baixa de REGISTRO não realizada. Selo não atribuído!'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;    
+    end
+    else if (RadioButton3.Checked) then
+    begin
+      if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'IRREGULAR', MaskEdit1.Text,'','','','','','','','','','','','','','','','','','') then
+      begin
+        AtualizaTabela('td', Label3.Caption, 'sit_not1,cod_ir1,data_not1', (Label6.Caption + ',' + Label7.Caption + ',' + ConvData(Label8.Caption)));
+        MessageBox(Handle, PChar('Baixa de IRREGULAR realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;
+    end
+    else if (RadioButton4.Checked) then
+    begin
+      if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'DÚVIDA', MaskEdit1.Text,'','','','','','','','','','','','','','','','','','') then
+      begin
+        MessageBox(Handle, PChar('Baixa de DÚVIDA realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;
+    end
+    else if (RadioButton5.Checked) then
+    begin
+      if BaixaProt(Label12.Caption, Label3.Caption, 'T', 'CANCELADO', MaskEdit1.Text,'','','','','','','','','',F_Exame.Label83.Caption,F_Exame.Label85.Caption,'','','','','','','') then
+      begin
+        MessageBox(Handle, PChar('Baixa de CANCELAMENTO realizada com sucesso.'), 'BAIXA DE TÍTULOS', MB_OK + MB_ICONINFORMATION);
+        Exit;
+      end;
+    end;
+
+    F_Baixa1.BitBtn2Click(F_Baixa1);
+  end
+  else
+    F_Baixa1.BitBtn2Click(F_Baixa1);
+end;
+
+Procedure TF_Baixa1.Def_Prazos;
+var
+  achaFeriado: boolean;
+  data_entregaTitulo, data: String;
+
+  cd, k, ds: integer;
+  sai_f: boolean;
+begin
+
+  Dm.Td.Close;
+  Dm.Td.Sql.Clear;
+  Dm.Td.Sql.Add('SELECT * FROM td');
+  Dm.Td.Sql.Add('WHERE');
+  Dm.Td.Sql.Add('p_auxiliar = ' + Trim(Label3.Caption));
+  Dm.Td.Open;
+
+    achaFeriado := true;
+    Funcoes.Abre_FeriadosClick(Funcoes);
+    if (Dm.Configur.FieldByName('prazo_diasUteis').AsBoolean) then  { Dias Corridos }
+    begin                                         //td.data_entr
+      data_entregaTitulo := DateToStr(StrToDate(Dm.td.FieldByName('data_entr').AsString) + Dm.Configur.FieldByName('prazo_t_t').AsInteger );
+      if (dayofweek(StrToDate(data_entregaTitulo)) = 1) then
+        data_entregaTitulo := DateToStr(StrToDate(data_entregaTitulo) + 1)
+      else if (dayofweek(StrToDate(data_entregaTitulo)) = 7) then
+        data_entregaTitulo := DateToStr(StrToDate(data_entregaTitulo) + 2);
+      data_entregaTitulo := Copy(data_entregaTitulo,1,2) + '/' + Copy(data_entregaTitulo,4,2) + '/' + Copy(data_entregaTitulo,7,4);
+      while achaFeriado do
+      begin
+        if DM.Feriados.Locate('data',StrToDate(data_entregaTitulo),[]) then
+        begin
+          data_entregaTitulo := DateToStr(StrToDate(data) + 1);
+          if (dayofweek(StrToDate(data_entregaTitulo)) = 1) then
+            data_entregaTitulo := DateToStr(StrToDate(data_entregaTitulo) + 1)
+          else if (dayofweek(StrToDate(data_entregaTitulo)) = 7) then
+            data_entregaTitulo := DateToStr(StrToDate(data_entregaTitulo) + 2);
+          data_entregaTitulo := Copy(data_entregaTitulo,1,2) + '/' + Copy(data_entregaTitulo,4,2) + '/' + Copy(data_entregaTitulo,7,4);
+        end
+        else
+          achaFeriado := false;
+      end;
+    end
+    else   { Dias Úteis }
+    begin
+      cd := 0;
+      sai_f := false;
+      for k := 1 to 100 do
+      begin
+        if sai_f = false then
+        begin
+          ds := dayofweek(StrToDate(Dm.td.FieldByName('data_entr').AsString) + k);
+          if (ds <> 1) and (ds <> 7) then
+          begin                                         //td.data_entr
+            data_entregaTitulo := DateToStr(StrToDate(Dm.td.FieldByName('data_entr').AsString) + k);    ///formatDateTime
+            data_entregaTitulo := Copy(data_entregaTitulo,1,2) + '/' + Copy(data_entregaTitulo,4,2) + '/' + Copy(data_entregaTitulo,7,4);
+            if (not DM.Feriados.Locate('data',StrToDate(data_entregaTitulo),[])) then
+            begin
+              cd := cd + 1;
+              if cd >= Dm.Configur.FieldByName('prazo_t_t').AsInteger then
+              begin
+                data_entregaTitulo := DateToStr(StrToDate(Dm.td.FieldByName('data_entr').AsString) + k);
+                if (dayofweek(StrToDate(data_entregaTitulo)) <> 1) and (dayofweek(StrToDate(data_entregaTitulo)) <> 7) then
+                begin
+                  data_entregaTitulo := Copy(data_entregaTitulo,1,2) + '/' + Copy(data_entregaTitulo,4,2) + '/' + Copy(data_entregaTitulo,7,4);
+                  if (not DM.Feriados.Locate('data',StrToDate(data_entregaTitulo),[])) then
+                    sai_f := True;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+    end;
+    Funcoes.Fecha_FeriadosClick(Funcoes);
+
+    //update td.data_entr = data_entregaTitulo
+    with Dm.qryGenerico do
+    begin
+      Close;
+      SQL.Clear;
+      SQL.Add('update td set data_entr = '+ data_entregaTitulo);
+      SQL.Add('where p_auxiliar = ' + Trim(Label3.Caption));
+      ExecSQL;
+    end;
+end;
+
+procedure TF_Baixa1.MaskEdit1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 27 then close;
+  if key = 13 then bitbtn1.setfocus;
+end;
+
+procedure TF_Baixa1.FormActivate(Sender: TObject);
+begin
+  {if RadioButton2.Checked then
+  begin
+    GroupBox2.Enabled := True;
+    MaskEdit2.SetFocus;
+  end
+  else
+  begin
+    GroupBox2.Enabled := False;}
+    BitBtn1.SetFocus;
+  //end;
+end;
+
+procedure TF_Baixa1.RadioButton3Click(Sender: TObject);
+begin
+{  Label6.Caption := '';
+  Label7.Caption := '';
+  Label8.Caption := '';
+  Application.CreateForm(TF_PIRR, F_PIRR);
+  F_PIRR.ShowModal;
+  Label6.Caption := '1';
+  Label7.Caption := Dm.Cad_Ir.FieldByName('codigo').asString;
+  Label8.Caption := MaskEdit1.Text;
+  F_PIRR.Destroy;
+  F_PIRR := NIL;
+  BitBtn1.SetFocus; }
+end;
+
+procedure TF_Baixa1.MaskEdit2KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 13 then MaskEdit3.SetFocus;
+end;
+
+procedure TF_Baixa1.MaskEdit3KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 13 then BitBtn1.SetFocus;
+end;
+
+procedure TF_Baixa1.InsereHistoricoDeProtocoloRegistro(TipoAcao, nome_parte,
+  nome_apresentante, averbacao: String; protocolo, registro,
+  cod_natureza: Integer; data_recepcao, data_baixa: TDateTime);
+Begin  
+  If TipoAcao = 'I' Then
+  Begin
+    dm.qryGenerico.Close;
+    dm.qryGenerico.SQL.Clear;
+    dm.qryGenerico.SQL.Add('INSERT INTO historicoregistro(nome_parte, nome_apresentante, averbacao, protocolo, registro, cod_natureza, data_recepcao, data_baixa)');
+    dm.qryGenerico.SQL.Add('VALUES (');
+
+    dm.qryGenerico.SQL.Add(QuotedStr(nome_parte) + ',');
+    dm.qryGenerico.SQL.Add(QuotedStr(nome_apresentante) + ',');
+
+    if (Not(ModalidadeAverbacaoCapital)) Then
+    Begin
+      dm.qryGenerico.SQL.Add(QuotedStr(averbacao) + ',');
+      dm.qryGenerico.SQL.Add(IntToStr(registro) + ',');
+    End
+    Else
+    Begin
+      dm.qryGenerico.SQL.Add(IntToStr(registro) + ',');
+      dm.qryGenerico.SQL.Add(QuotedStr(averbacao) + ',');
+    End;
+    dm.qryGenerico.SQL.Add(IntToStr(protocolo) + ',');
+    dm.qryGenerico.SQL.Add(IntToStr(cod_natureza) + ',');
+    dm.qryGenerico.SQL.Add(QuotedStr(ConvData(DateToStr(data_recepcao))) + ', ');
+    dm.qryGenerico.SQL.Add(QuotedStr(ConvData(DateToStr(data_baixa))) + ')');
+    Try
+      dm.qryGenerico.ExecSQL
+    Except
+      ShowMessage('Falha ao gravar histórico de registro.');
+    End;    
+  End;
+
+  If TipoAcao = 'D' Then
+  Begin
+    dm.qryGenerico.Close;
+    dm.qryGenerico.SQL.Clear;
+    dm.qryGenerico.SQL.Add('DELETE FROM historicoregistro WHERE protocolo = :protocolo and registro = :registro and averbacao = :averbacao');
+
+    dm.qryGenerico.ParamByName('protocolo').AsInteger       := protocolo;
+
+    if (Not(ModalidadeAverbacaoCapital)) Then
+    Begin
+      dm.qryGenerico.ParamByName('averbacao').AsString        := averbacao;
+      dm.qryGenerico.ParamByName('registro').AsInteger        := registro;
+    End
+    Else
+    Begin
+      dm.qryGenerico.ParamByName('averbacao').AsInteger       := registro;
+      dm.qryGenerico.ParamByName('registro').AsString         := averbacao;
+    End;
+
+    dm.qryGenerico.ExecSQL;
+  End;
+
+end;
+
+end.
